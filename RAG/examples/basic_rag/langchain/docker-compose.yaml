@@ -28,7 +28,7 @@ services:
       # url on which llm model is hosted. If "", Nvidia hosted API is used
       APP_LLM_MODELNAME: ${APP_LLM_MODELNAME:-"meta/llama3-70b-instruct"}
       # embedding model engine used for inference, supported type nvidia-ai-endpoints, huggingface
-      APP_LLM_MODELENGINE: nvidia-ai-endpoints
+      APP_LLM_MODELENGINE: ${APP_EMBEDDINGS_MODELENGINE:-adaptive}
       APP_LLM_SERVERURL: ${APP_LLM_SERVERURL:-""}
       APP_EMBEDDINGS_MODELNAME: ${APP_EMBEDDINGS_MODELNAME:-nvidia/nv-embedqa-e5-v5}
       # embedding model engine used for inference, supported type nvidia-ai-endpoints
@@ -40,6 +40,7 @@ services:
       APP_TEXTSPLITTER_CHUNKSIZE: 506
       APP_TEXTSPLITTER_CHUNKOVERLAP: 200
       NVIDIA_API_KEY: ${NVIDIA_API_KEY}
+      ADAPTIVE_API_KEY: ${ADAPTIVE_API_KEY}
       # vectorstore collection name to store embeddings 
       COLLECTION_NAME: ${COLLECTION_NAME:-nvidia_api_catalog}
       APP_RETRIEVER_TOPK: 4
@@ -60,37 +61,37 @@ services:
       nemollm-embedding:
         condition: service_healthy
         required: false
-      nemollm-inference:
-        condition: service_healthy
-        required: false
+      # nemollm-inference:
+      #   condition: service_healthy
+      #   required: false
 
-  rag-playground:
-    container_name: rag-playground
-    image: rag-playground:${TAG:-latest}
-    build:
-      # Set context to repo's root directory
-      context: ../../../../RAG/src/rag_playground/
-      dockerfile: Dockerfile
-      args:
-        # select UI type, supported model default, speech
-        PLAYGROUND_MODE: ${PLAYGROUND_MODE:-default}
-    command: --port 8090
-    environment:
-      # URL or chain server container
-      APP_SERVERURL: http://chain-server
-      APP_SERVERPORT: 8081
-      # model name displayed on UI
-      APP_MODELNAME: ${APP_LLM_MODELNAME:-"meta/llama3-70b-instruct"}
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
-      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
-      # enable observability in rag playground
-      ENABLE_TRACING: false
-    ports:
-    - "8090:8090"
-    expose:
-    - "8090"
-    depends_on:
-    - chain-server
+  # rag-playground:
+  #   container_name: rag-playground
+  #   image: rag-playground:${TAG:-latest}
+  #   build:
+  #     # Set context to repo's root directory
+  #     context: ../../../../RAG/src/rag_playground/
+  #     dockerfile: Dockerfile
+  #     args:
+  #       # select UI type, supported model default, speech
+  #       PLAYGROUND_MODE: ${PLAYGROUND_MODE:-default}
+  #   command: --port 8090
+  #   environment:
+  #     # URL or chain server container
+  #     APP_SERVERURL: http://chain-server
+  #     APP_SERVERPORT: 8081
+  #     # model name displayed on UI
+  #     APP_MODELNAME: ${APP_LLM_MODELNAME:-"meta/llama3-70b-instruct"}
+  #     OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+  #     OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+  #     # enable observability in rag playground
+  #     ENABLE_TRACING: false
+  #   ports:
+  #   - "8090:8090"
+  #   expose:
+  #   - "8090"
+  #   depends_on:
+  #   - chain-server
 
 networks:
   default:

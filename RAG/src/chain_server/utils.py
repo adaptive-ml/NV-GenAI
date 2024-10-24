@@ -79,6 +79,11 @@ try:
 except Exception as e:
     logger.error(f"Langchain nvidia ai endpoints import failed with error: {e}")
 
+try: 
+    from langchain_openai import ChatOpenAI
+except Exception as e:
+    logger.error(f"Langchain openai import failed with error: {e}")
+
 try:
     from langchain_community.docstore.in_memory import InMemoryDocstore
     from langchain_community.vectorstores import Milvus, PGVector
@@ -393,9 +398,17 @@ def get_llm(**kwargs) -> LLM | SimpleChatModel:
                 top_p=kwargs.get('top_p', None),
                 max_tokens=kwargs.get('max_tokens', None),
             )
+    elif settings.llm.model_engine == "adaptive":
+        if settings.llm.server_url:
+            adaptive_api_key = os.getenv("ADAPTIVE_API_KEY")
+            assert adaptive_api_key, "Need an ADAPTIVE_API_KEY env var to use adaptive llm model engine"
+            logger.info(f"Using llm model {settings.llm.model_name} hosted at {settings.llm.server_url}")
+            return ChatOpenAI(base_url=settings.llm.server_url, api_key=adaptive_api_key, model=settings.llm.model_name)
+        else:
+            raise RuntimeError("Need a server url to use adaptive model engine.")
     else:
         raise RuntimeError(
-            "Unable to find any supported Large Language Model server. Supported engine name is nvidia-ai-endpoints."
+            "Unable to find any supported Large Language Model server. Supported engine names are [nvidia-ai-endpoints, adaptive]."
         )
 
 
